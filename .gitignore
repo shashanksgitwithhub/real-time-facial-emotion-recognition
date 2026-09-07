@@ -1,0 +1,22 @@
+# Python virtual environment
+.venv/
+
+# Python cache
+__pycache__/
+*.py[cod]
+
+# TensorFlow/Keras cache
+.keras/
+
+# Trained model files
+checkpoints/*.keras
+
+# FER-2013 dataset
+Data/
+
+# IDE settings
+.vscode/
+
+# OS files
+.DS_Store
+Thumbs.db
