@@ -199,17 +199,16 @@ checkpoints/final_model.keras
 
 ## Model Performance
 
-The trained CNN model was evaluated on the FER-2013 test dataset.
+The CNN model was evaluated on the FER-2013 test dataset containing 7,178 images.
 
-The model achieved:
+- Test Accuracy: **66.61%**
+- Test Loss: **1.2025**
+- Weighted F1-Score: **0.66**
+- Macro F1-Score: **0.64**
 
-- Test Accuracy: **60.76%**
-- Test Samples: **7,178**
-- Correct Predictions: **4,361**
+A confusion matrix and classification report are generated during evaluation to analyze performance across all seven emotion classes.
 
-The model performs relatively well on expressions such as Happy, Neutral, and Surprise, while Fear and Disgust are more challenging classes.
-
-The confusion matrix below provides a detailed view of correct and incorrect predictions across all seven emotion classes.
+The model performs particularly well on Happy and Surprise emotions, while Fear and Sad remain more challenging due to similarities between facial expressions.
 
 ### Confusion Matrix
 
