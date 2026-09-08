@@ -179,7 +179,7 @@ The CNN is trained using:
 - Categorical cross-entropy loss
 - Accuracy metric
 - Batch size: 64
-- Maximum epochs: 40
+- Maximum epochs: 50
 - Early stopping
 - Best-model checkpointing
 
@@ -212,7 +212,7 @@ The model performs particularly well on Happy and Surprise emotions, while Fear 
 
 ### Confusion Matrix
 
-![FER-2013 Confusion Matrix](checkpoints/confusion_matrix.png)
+<img width="640" height="480" alt="Figure_1" src="https://github.com/user-attachments/assets/eba14514-670e-4ae8-a451-e4ddb3cb5c3b" />
 
 The model performs relatively well on expressions such as Happy, Neutral, and Surprise, while Fear and Disgust are more challenging classes.
 
