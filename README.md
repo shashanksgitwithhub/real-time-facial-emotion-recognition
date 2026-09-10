@@ -26,37 +26,7 @@ This project addresses the problem by developing a computer vision and deep lear
 
 ## System Architecture
 
-```text
-                    FER-2013 Dataset
-                           |
-                           v
-                  Image Preprocessing
-                           |
-                           v
-                    Data Augmentation
-                           |
-                           v
-                    CNN Model Training
-                           |
-                           v
-                    Trained CNN Model
-                           |
-                           v
-                       Webcam
-                           |
-                           v
-                    Face Detection
-                  (OpenCV Haar Cascade)
-                           |
-                           v
-                   Grayscale 48×48
-                           |
-                           v
-                    CNN Prediction
-                           |
-                           v
-              Emotion + Confidence Score
-```
+<img width="582" height="1170" alt="emo1 drawio" src="https://github.com/user-attachments/assets/e8c28822-dce0-4b25-8a0f-4fbed96f1785" />
 
 ## Technologies Used
 
