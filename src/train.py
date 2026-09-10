@@ -1,136 +1,242 @@
 import os
 import tensorflow as tf
 from tensorflow.keras.preprocessing.image import ImageDataGenerator
+from sklearn.utils.class_weight import compute_class_weight
+import numpy as np
 
 from src.model import build_model
 
 
-# =========================
-# Project Configuration
-# =========================
+# ==============================
+# Configuration
+# ==============================
 
 DATA_DIR = "Data/fer2013"
 CHECKPOINT_DIR = "checkpoints"
 
-TRAIN_DIR = os.path.join(DATA_DIR, "train")
-TEST_DIR = os.path.join(DATA_DIR, "test")
+IMAGE_SIZE = (48, 48)
+BATCH_SIZE = 64
+EPOCHS = 50
 
-os.makedirs(CHECKPOINT_DIR, exist_ok=True)
 
-
-# =========================
+# ==============================
 # Main Training Function
-# =========================
+# ==============================
 
 def main():
 
-    print("Starting FER-2013 training...")
-    print("Training directory:", TRAIN_DIR)
-    print("Testing directory:", TEST_DIR)
+    os.makedirs(CHECKPOINT_DIR, exist_ok=True)
 
-    # Training data augmentation
+    print("\n========================================")
+    print("   FER-2013 Emotion Recognition")
+    print("   Improved CNN Training")
+    print("========================================\n")
+
+    # --------------------------------
+    # Data augmentation
+    # --------------------------------
+
     train_datagen = ImageDataGenerator(
-        rescale=1.0 / 255,
+        rescale=1.0 / 255.0,
+
         rotation_range=15,
-        width_shift_range=0.1,
-        height_shift_range=0.1,
-        zoom_range=0.1,
-        horizontal_flip=True
+        width_shift_range=0.10,
+        height_shift_range=0.10,
+
+        shear_range=0.10,
+        zoom_range=0.15,
+
+        horizontal_flip=True,
+
+        brightness_range=(0.8, 1.2),
+
+        fill_mode="nearest"
     )
 
-    # Test data is only normalized
     test_datagen = ImageDataGenerator(
-        rescale=1.0 / 255
+        rescale=1.0 / 255.0
     )
 
-    # =========================
-    # Load Training Dataset
-    # =========================
+    # --------------------------------
+    # Training data
+    # --------------------------------
 
-    train_generator = train_datagen.flow_from_directory(
-        TRAIN_DIR,
-        target_size=(48, 48),
+    train_gen = train_datagen.flow_from_directory(
+        os.path.join(DATA_DIR, "train"),
+
+        target_size=IMAGE_SIZE,
         color_mode="grayscale",
-        batch_size=64,
+
+        batch_size=BATCH_SIZE,
+
         class_mode="categorical",
+
         shuffle=True
     )
 
-    # =========================
-    # Load Test Dataset
-    # =========================
+    # --------------------------------
+    # Validation/Test data
+    # --------------------------------
 
-    test_generator = test_datagen.flow_from_directory(
-        TEST_DIR,
-        target_size=(48, 48),
+    val_gen = test_datagen.flow_from_directory(
+        os.path.join(DATA_DIR, "test"),
+
+        target_size=IMAGE_SIZE,
         color_mode="grayscale",
-        batch_size=64,
+
+        batch_size=BATCH_SIZE,
+
         class_mode="categorical",
+
         shuffle=False
     )
 
-    print("\nEmotion class mapping:")
-    print(train_generator.class_indices)
+    print("\nClass mapping:")
+    print(train_gen.class_indices)
 
-    # =========================
-    # Build CNN Model
-    # =========================
+    # --------------------------------
+    # Calculate class weights
+    # --------------------------------
+
+    class_weights_array = compute_class_weight(
+        class_weight="balanced",
+
+        classes=np.unique(train_gen.classes),
+
+        y=train_gen.classes
+    )
+
+    class_weights = dict(
+        enumerate(class_weights_array)
+    )
+
+    print("\nClass weights:")
+    print(class_weights)
+
+    # --------------------------------
+    # Build improved CNN
+    # --------------------------------
+
+    print("\nBuilding improved CNN...")
 
     model = build_model()
 
-    model.summary()
+    print("\nModel created successfully.\n")
 
-    # =========================
+    # --------------------------------
     # Callbacks
-    # =========================
+    # --------------------------------
 
     checkpoint = tf.keras.callbacks.ModelCheckpoint(
         filepath=os.path.join(
             CHECKPOINT_DIR,
             "best_model.keras"
         ),
+
         monitor="val_accuracy",
+
         save_best_only=True,
+
+        mode="max",
+
         verbose=1
     )
 
-    early_stopping = tf.keras.callbacks.EarlyStopping(
+    early_stop = tf.keras.callbacks.EarlyStopping(
         monitor="val_loss",
-        patience=8,
+
+        patience=10,
+
         restore_best_weights=True,
+
         verbose=1
     )
 
-    # =========================
-    # Train Model
-    # =========================
+    reduce_lr = tf.keras.callbacks.ReduceLROnPlateau(
+        monitor="val_loss",
+
+        factor=0.5,
+
+        patience=4,
+
+        min_lr=1e-6,
+
+        verbose=1
+    )
+
+    # --------------------------------
+    # Train
+    # --------------------------------
+
+    print("\n========================================")
+    print("        STARTING TRAINING")
+    print("========================================\n")
 
     history = model.fit(
-        train_generator,
-        epochs=40,
-        validation_data=test_generator,
+
+        train_gen,
+
+        epochs=EPOCHS,
+
+        validation_data=val_gen,
+
+        class_weight=class_weights,
+
         callbacks=[
             checkpoint,
-            early_stopping
+            early_stop,
+            reduce_lr
         ]
     )
 
-    # =========================
-    # Save Final Model
-    # =========================
+    # --------------------------------
+    # Save final model
+    # --------------------------------
 
-    model.save(
-        os.path.join(
-            CHECKPOINT_DIR,
-            "final_model.keras"
-        )
+    final_model_path = os.path.join(
+        CHECKPOINT_DIR,
+        "final_model.keras"
     )
 
-    print("\n===================================")
-    print("Training completed successfully!")
-    print("Best model: checkpoints/best_model.keras")
-    print("Final model: checkpoints/final_model.keras")
-    print("===================================")
+    model.save(final_model_path)
+
+    # --------------------------------
+    # Display results
+    # --------------------------------
+
+    best_val_accuracy = max(
+        history.history["val_accuracy"]
+    )
+
+    best_train_accuracy = max(
+        history.history["accuracy"]
+    )
+
+    print("\n========================================")
+    print("       TRAINING COMPLETED")
+    print("========================================")
+
+    print(
+        f"\nBest Training Accuracy: "
+        f"{best_train_accuracy * 100:.2f}%"
+    )
+
+    print(
+        f"Best Validation Accuracy: "
+        f"{best_val_accuracy * 100:.2f}%"
+    )
+
+    print(
+        f"\nBest model saved to:"
+        f"\n{CHECKPOINT_DIR}/best_model.keras"
+    )
+
+    print(
+        f"\nFinal model saved to:"
+        f"\n{CHECKPOINT_DIR}/final_model.keras"
+    )
+
+    print("\n========================================\n")
 
 
 if __name__ == "__main__":
