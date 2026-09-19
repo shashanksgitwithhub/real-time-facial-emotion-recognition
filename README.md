@@ -208,30 +208,7 @@ checkpoints/confusion_matrix.png
 
 The real-time application follows this pipeline:
 
-```text
-Webcam Frame
-     |
-     v
-Convert to Grayscale
-     |
-     v
-Detect Face using Haar Cascade
-     |
-     v
-Extract Face Region
-     |
-     v
-Resize to 48 × 48
-     |
-     v
-Normalize Pixel Values
-     |
-     v
-CNN Prediction
-     |
-     v
-Display Emotion + Confidence
-```
+<img width="582" height="940" alt="em drawio" src="https://github.com/user-attachments/assets/cb70c133-0eea-4afa-8984-3ec03126184a" />
 
 The application detects faces from the webcam and displays the predicted emotion and confidence percentage above each detected face.
 
